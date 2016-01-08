@@ -39,9 +39,8 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import java.util.Calendar;
+import java.util.Random;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -324,6 +323,7 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
                     Log.d(TAG, "TAP_TYPE_TOUCH_CANCEL detected");
                     break;
                 case TAP_TYPE_TAP:
+                    smiley2 = false;
                     mTapCommandTotal++;
                     Log.d(TAG, "TAP_TYPE_TAP detected");
                     break;
@@ -472,7 +472,6 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
                 //canvas.drawColor(Color.BLACK);
                 /* Loop through all images to show eyes circling */
                 changeBackgroundImage(canvas);
-                //canvas.drawBitmap(mBackgroundBitmap2, 0, 0, mBackgroundPaint);
                 //smiley2 = false;
             }
             else {
@@ -550,33 +549,43 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
         }
 
         public void changeBackgroundImage(Canvas canvas) {
-            for (int i = 1; i<=5; i++) {
-                    if (i == 1) {
-                        Log.d(TAG, "i = 1");
-                        canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
-                        smiley2 = false;
-                    }
-                    else if (i == 2) {
-                        Log.d(TAG, "i = 2");
-                        canvas.drawBitmap(mBackgroundBitmap2, 0, 0, mBackgroundPaint);
-                        smiley2 = false;
-                    }
-                    else if(i == 3) {
-                        Log.d(TAG, "i = 3");
-                        canvas.drawBitmap(mBackgroundBitmap3, 0, 0, mBackgroundPaint);
-                        smiley2 = false;
-                    }
-                    else if (i == 4) {
-                        Log.d(TAG, "i = 4");
-                        canvas.drawBitmap(mBackgroundBitmap4, 0, 0, mBackgroundPaint);
-                        //smiley2 = false;
-                    }
-                    else {
-                        Log.d(TAG, "i = 5");
-                        canvas.drawBitmap(mBackgroundBitmap5, 0, 0, mBackgroundPaint);
-                        smiley2 = false;
-                    }
-            }
+            Bitmap [] myImages = {mBackgroundBitmap, mBackgroundBitmap2, mBackgroundBitmap3,
+            mBackgroundBitmap4, mBackgroundBitmap5};
+            Random ran = new Random();
+            int x = ran.nextInt(5);
+
+            Log.d(TAG, "x = "+x);
+            canvas.drawBitmap(myImages[x], 0, 0, mBackgroundPaint);
+            //smiley2 = false;
+
+
+//            for (int i = 1; i<=5; i++) {
+//                    if (i == 1) {
+//                        Log.d(TAG, "i = 1");
+//                        canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
+//                        smiley2 = false;
+//                    }
+//                    else if (i == 2) {
+//                        Log.d(TAG, "i = 2");
+//                        canvas.drawBitmap(mBackgroundBitmap2, 0, 0, mBackgroundPaint);
+//                        smiley2 = false;
+//                    }
+//                    else if(i == 3) {
+//                        Log.d(TAG, "i = 3");
+//                        canvas.drawBitmap(mBackgroundBitmap3, 0, 0, mBackgroundPaint);
+//                        smiley2 = false;
+//                    }
+//                    else if (i == 4) {
+//                        Log.d(TAG, "i = 4");
+//                        canvas.drawBitmap(mBackgroundBitmap4, 0, 0, mBackgroundPaint);
+//                        //smiley2 = false;
+//                    }
+//                    else {
+//                        Log.d(TAG, "i = 5");
+//                        canvas.drawBitmap(mBackgroundBitmap5, 0, 0, mBackgroundPaint);
+//                        smiley2 = false;
+//                    }
+//            }
         }
 
         @Override
