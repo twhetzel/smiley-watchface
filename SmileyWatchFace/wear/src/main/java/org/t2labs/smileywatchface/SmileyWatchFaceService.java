@@ -31,6 +31,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
@@ -39,7 +40,6 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import java.util.Calendar;
-import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -127,6 +127,8 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
         private int mTouchCoordinateX;
         private int mTouchCoordinateY;
 
+        //From Jono
+        int mOrientation = 0;
 
         private Rect mPeekCardBounds = new Rect();
 
@@ -315,7 +317,16 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
             switch(tapType) {
                 case TAP_TYPE_TOUCH:
                     mTouchCommandTotal++;
-                    smiley2 = true;
+                    // Tap to make eyes rotate
+                    if (smiley2) {
+                        smiley2 = false;
+                        Log.d(TAG, "Smiley: "+smiley2);
+                    }
+                    // Tap to step eyes rotating and display original image
+                    else {
+                        smiley2 = true;
+                        Log.d(TAG, "Smiley: "+smiley2);
+                    }
                     Log.d(TAG, "TAP_TYPE_TOUCH detected");
                     break;
                 case TAP_TYPE_TOUCH_CANCEL:
@@ -323,7 +334,7 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
                     Log.d(TAG, "TAP_TYPE_TOUCH_CANCEL detected");
                     break;
                 case TAP_TYPE_TAP:
-                    smiley2 = false;
+                    //smiley2 = false;
                     mTapCommandTotal++;
                     Log.d(TAG, "TAP_TYPE_TAP detected");
                     break;
@@ -430,17 +441,6 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
         }
 
 
-        /*@Override
-        public void onSurfaceRedrawNeeded(SurfaceHolder holder) {
-            //Scale loaded background image (more efficient) if surface dimensions change.
-            float scale = ((float) width) / (float) mBackgroundBitmap.getWidth();
-
-            mBackgroundBitmap = Bitmap.createScaledBitmap(mBackgroundBitmap,
-                    (int) (mBackgroundBitmap.getWidth() * scale),
-                    (int) (mBackgroundBitmap.getHeight() * scale), true);
-        }*/
-
-
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
@@ -468,14 +468,74 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
             } else if (mAmbient) {
                 canvas.drawBitmap(mGrayBackgroundBitmap, 0, 0, mBackgroundPaint);
             } else if (smiley2) {
-                Log.d(TAG, "Value of smiley(Tap 2): "+ smiley2);
-                //canvas.drawColor(Color.BLACK);
+                Log.d(TAG, "Value of smiley(isInteractive): "+ smiley2);
                 /* Loop through all images to show eyes circling */
-                changeBackgroundImage(canvas);
-                //smiley2 = false;
-            }
-            else {
+                //changeBackgroundImage(canvas);
+
+                // New approach from Jono
+                // Draw images in order of eyes rotating in a circle
+                if (mOrientation < 50) {
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                    canvas.drawBitmap(mBackgroundBitmap2, 0, 0, mBackgroundPaint);
+                    mOrientation+=5;
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                }
+                else if (mOrientation >= 50 && mOrientation < 100) {
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                    canvas.drawBitmap(mBackgroundBitmap3, 0, 0, mBackgroundPaint);
+                    mOrientation+=5;
+                }
+                else if (mOrientation >= 100 && mOrientation < 150) {
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                    canvas.drawBitmap(mBackgroundBitmap4, 0, 0, mBackgroundPaint);
+                    mOrientation+=5;
+                }
+                else if (mOrientation >= 150 && mOrientation < 200) {
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                    canvas.drawBitmap(mBackgroundBitmap5, 0, 0, mBackgroundPaint);
+                    mOrientation+=5;
+                }
+                else {
+                    // Reset
+                    smiley2 = false;
+                    Log.d(TAG, "Orientation: "+mOrientation);
+                    canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
+                }
+
+                int delayLength;
+                switch(mOrientation) {
+                    case 0:
+                        delayLength = 50;
+                        Log.d(TAG, "Delay:"+delayLength);
+                        break;
+                    case 50:
+                        delayLength = 50;
+                        Log.d(TAG, "Delay:"+delayLength);
+                        break;
+                    case 100:
+                        delayLength = 50;
+                        Log.d(TAG, "Delay:"+delayLength);
+                        break;
+                    case 150:
+                        delayLength = 50;
+                        Log.d(TAG, "Delay: "+delayLength);
+                        break;
+                    default:
+                        delayLength = 5;
+                        break;
+                }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Runnable working...");
+                        invalidate();
+                    }
+                }, delayLength);
+
+            } else {
+                Log.d(TAG, "Reset");
                 canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
+                mOrientation = 0;
             }
 
             /*
@@ -551,41 +611,18 @@ public class SmileyWatchFaceService extends CanvasWatchFaceService {
         public void changeBackgroundImage(Canvas canvas) {
             Bitmap [] myImages = {mBackgroundBitmap, mBackgroundBitmap2, mBackgroundBitmap3,
             mBackgroundBitmap4, mBackgroundBitmap5};
-            Random ran = new Random();
-            int x = ran.nextInt(5);
 
-            Log.d(TAG, "x = "+x);
-            canvas.drawBitmap(myImages[x], 0, 0, mBackgroundPaint);
-            //smiley2 = false;
+            // Randomly draw images
+//            Random ran = new Random();
+//            int x = ran.nextInt(5);
+//            Log.d(TAG, "x = " + x);
+//            canvas.drawBitmap(myImages[x], 0, 0, mBackgroundPaint);
 
-
-//            for (int i = 1; i<=5; i++) {
-//                    if (i == 1) {
-//                        Log.d(TAG, "i = 1");
-//                        canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
-//                        smiley2 = false;
-//                    }
-//                    else if (i == 2) {
-//                        Log.d(TAG, "i = 2");
-//                        canvas.drawBitmap(mBackgroundBitmap2, 0, 0, mBackgroundPaint);
-//                        smiley2 = false;
-//                    }
-//                    else if(i == 3) {
-//                        Log.d(TAG, "i = 3");
-//                        canvas.drawBitmap(mBackgroundBitmap3, 0, 0, mBackgroundPaint);
-//                        smiley2 = false;
-//                    }
-//                    else if (i == 4) {
-//                        Log.d(TAG, "i = 4");
-//                        canvas.drawBitmap(mBackgroundBitmap4, 0, 0, mBackgroundPaint);
-//                        //smiley2 = false;
-//                    }
-//                    else {
-//                        Log.d(TAG, "i = 5");
-//                        canvas.drawBitmap(mBackgroundBitmap5, 0, 0, mBackgroundPaint);
-//                        smiley2 = false;
-//                    }
-//            }
+            // Draw images in order of eyes rotating in a circle
+            for (int i = 0; i < myImages.length; i++) {
+                Log.d(TAG, "Int:"+i);
+                canvas.drawBitmap(myImages[i], 0, 0, mBackgroundPaint);
+            }
         }
 
         @Override
